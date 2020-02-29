@@ -72,8 +72,8 @@ def handle_dialog(event, context):
 
     end_session = False
     new_state = None
-    response_text = "Привет! Я помогу тебе подобрать фильм." \
-                    " Я могу посоветовать Вам комедию, боевик, триллер, драму или фильм ужасов. Что Вас интересует?"
+    response_text = "Я помогу Вам подобрать фильм. " \
+                    "Назовите мне похожий фильм или интересующий вас жанр."
 
     if event["session"]["new"]:
         pass
@@ -96,7 +96,8 @@ def handle_dialog(event, context):
         new_state = {"year": year_phrase, "genre": genre_phrase}
 
         film_name = get_film(new_state["genre"], new_state["year"])
-        response_text = f"Посмотри {film_name}"
+        response_text = f"Посмотри {film_name}\n"
+        response_text += "Показать похожие?"
         end_session = True
 
     elif "similar" in intents:
