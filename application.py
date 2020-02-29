@@ -64,6 +64,10 @@ def handle_dialog(event, context):
         film_name = get_film(new_state["genre"], new_state["year"])
         response_text = f"Посмотри {film_name}"
         end_session = True
+    elif "help" in intents:
+        response_text = """
+        Я могу рекомендовать фильмы по жанру, найти похожий фильм или найти фильм с вашими любимыми актерами
+        """
 
     print(event)
     print("\n\n\n\n")
