@@ -46,19 +46,22 @@ def get_similar_by_id(id_, topn=3):
 
 
 def get_film(genre, freshness):
-    print(genre, freshness)
-    threshold = "2010"
-    if freshness == "new":
-        films_data_tmp = films_data[(films_data["genre"] == genre) & (films_data["year"].astype(str) >= threshold)]
-    else:
-        films_data_tmp = films_data[(films_data["genre"] == genre) & (films_data["year"].astype(str) < threshold)]
+    try:
+        print(genre, freshness)
+        threshold = "2010"
+        if freshness == "new":
+            films_data_tmp = films_data[(films_data["genre"] == genre) & (films_data["year"].astype(str) >= threshold)]
+        else:
+            films_data_tmp = films_data[(films_data["genre"] == genre) & (films_data["year"].astype(str) < threshold)]
 
-    print(films_data_tmp)
+        print(films_data_tmp)
 
-    if len(films_data_tmp) > 0:
-        films_data_tmp.sample(frac=1)
-        film_name = films_data_tmp.iloc[0]["name"]
-        return film_name
+        if len(films_data_tmp) > 0:
+            films_data_tmp.sample(frac=1)
+            film_name = films_data_tmp.iloc[0]["name"]
+            return film_name
+    except:
+        return "Властелин Колец"
     return "Властелин Колец"
 
 
@@ -97,7 +100,6 @@ def handle_dialog(event, context):
         end_session = True
 
     elif "similar" in intents:
-        print("TESTTTTTTT")
         print(intents)
         film_name = intents["similar"]["slots"]["film"]["value"]
         print(film_name)
@@ -109,7 +111,8 @@ def handle_dialog(event, context):
         response_text = "Не нашла похожие фильмы"
         if mid:
             similar_names = get_similar_by_id(mid, topn=3)
-            response_text = f"Похожие фильмы - {' '.join([sim.title for sim in similar_names])}"
+            response_text = f"Похожие фильмы:\n"
+            response_text += "\n".join([sim.title for sim in similar_names])
 
         print(response_text)
     else:
