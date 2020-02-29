@@ -66,61 +66,81 @@ def get_film(genre, freshness):
 
 
 def handle_dialog(event, context):
-    genre_phrase = event.get('state', {}).get('session', {}).get('genre', "")
-    year_phrase = event.get('state', {}).get('session', {}).get('year', "")
-    intents = event.get('request', {}).get('nlu', {}).get('intents', {})
+    try:
+        genre_phrase = event.get('state', {}).get('session', {}).get('genre', "")
+        year_phrase = event.get('state', {}).get('session', {}).get('year', "")
+        intents = event.get('request', {}).get('nlu', {}).get('intents', {})
 
-    end_session = False
-    new_state = None
-    response_text = "Я помогу Вам подобрать фильм. " \
-                    "Назовите мне похожий фильм или интересующий вас жанр."
+        end_session = False
+        new_state = None
+        response_text = "Я помогу Вам подобрать фильм. " \
+                        "Назовите мне похожий фильм или интересующий вас жанр."
 
-    if event["session"]["new"]:
-        pass
-
-    elif "help" in intents:
-        response_text = """
-            Я могу рекомендовать фильмы по жанру, найти похожий фильм или найти фильм с вашими любимыми актерами
-            """
-    elif "genre" in intents:
-        genre_phrase = list(intents["genre"]["slots"].keys())[0]
-        new_state = {'genre': genre_phrase}
-        response_text = "Хотите посмотреть новинку или классику?"
-
-        # добавить проверку - есть ли у нас такой жанр или нет
-
-    elif "year" in intents:
-        year_phrase = list(intents["year"]["slots"].keys())[0]
-        if genre_phrase == "":
+        if event["session"]["new"]:
             pass
-        new_state = {"year": year_phrase, "genre": genre_phrase}
 
-        film_name = get_film(new_state["genre"], new_state["year"])
-        response_text = f"Посмотри {film_name}\n"
-        response_text += "Показать похожие?"
+        elif "help" in intents:
+            response_text = """
+                Я могу рекомендовать фильмы по жанру, найти похожий фильм или найти фильм с вашими любимыми актерами
+                """
+            end_session = True
+
+        elif "genre" in intents:
+            keys = intents["genre"]["slots"].keys()
+            if len(keys) == 0:
+                genre_phrase = "comedy"
+            else:
+                genre_phrase = list(keys)[0]
+            new_state = {'genre': genre_phrase}
+            response_text = "Хотите посмотреть новинку или классику?"
+
+            # добавить проверку - есть ли у нас такой жанр или нет
+
+        elif "year" in intents:
+            year_phrase = list(intents["year"]["slots"].keys())[0]
+            if genre_phrase == "":
+                pass
+            new_state = {"year": year_phrase, "genre": genre_phrase}
+
+            film_name = get_film(new_state["genre"], new_state["year"])
+            response_text = f'Посмотри {film_name}'
+
+            end_session = True
+
+        elif "similar" in intents:
+            print(intents)
+            film_name = intents["similar"]["slots"]["film"]["value"]
+            print(film_name)
+            film_name = morph.parse(film_name)[0]
+            norm_form = film_name.normal_form
+            print(norm_form)
+
+            mid = get_movie_id_by_name(norm_form)
+            response_text = "Не нашла похожие фильмы"
+            if mid:
+                similar_names = get_similar_by_id(mid, topn=3)
+                response_text = f"Похожие фильмы:\n"
+                response_text += "\n".join([sim.title for sim in similar_names])
+
+            print(response_text)
+            end_session = True
+        else:
+            response_text = "Вы молодец"
+            end_session = True
+
+        print(event)
+        print("\n\n\n\n")
+    except:
+        response_text = "Думаю, 'Властелин Колец' подойдет Вам"
         end_session = True
-
-    elif "similar" in intents:
-        print(intents)
-        film_name = intents["similar"]["slots"]["film"]["value"]
-        print(film_name)
-        film_name = morph.parse(film_name)[0]
-        norm_form = film_name.normal_form
-        print(norm_form)
-
-        mid = get_movie_id_by_name(norm_form)
-        response_text = "Не нашла похожие фильмы"
-        if mid:
-            similar_names = get_similar_by_id(mid, topn=3)
-            response_text = f"Похожие фильмы:\n"
-            response_text += "\n".join([sim.title for sim in similar_names])
-
-        print(response_text)
-    else:
-        response_text = "Вы молодец"
-
-    print(event)
-    print("\n\n\n\n")
+        return {
+            'version': event['version'],
+            'session': event['session'],
+            'response': {
+                'text': response_text,
+                'end_session': end_session
+            }
+        }
 
     return {
         'version': event['version'],
