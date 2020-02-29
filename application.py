@@ -17,68 +17,23 @@ logging.basicConfig(level=logging.DEBUG)
 sessionStorage = {}
 
 
+def handle_dialog(event, context):
+    translate_state = event.get('state', {}).get('session', {}).get('translate', {})
+    last_phrase = event.get('state', {}).get('session', {}).get('last_phrase')
+    intents = event.get('request', {}).get('nlu', {}).get('intents', {})
+    command = event.get('request', {}).get('command')
 
-# Функция для непосредственной обработки диалога.
-def handle_dialog(req, res):
-    user_id = req['session']['user_id']
+    print(event)
 
-    if req['session']['new']:
-        # Это новый пользователь.
-        # Инициализируем сессию и поприветствуем его.
-
-        sessionStorage[user_id] = {
-            'suggests': [
-                "Не хочу.",
-                "Не буду.",
-                "Отстань!",
-            ]
-        }
-
-        res['response']['text'] = 'Привет! Купи слона!'
-        res['response']['buttons'] = get_suggests(user_id)
-        return
-
-    # Обрабатываем ответ пользователя.
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо',
-    ]:
-        # Пользователь согласился, прощаемся.
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        return
-
-    # Если нет, то убеждаем его купить слона!
-    res['response']['text'] = 'Все говорят "%s", а ты купи слона!' % (
-        req['request']['original_utterance']
-    )
-    res['response']['buttons'] = get_suggests(user_id)
-
-# Функция возвращает две подсказки для ответа.
-def get_suggests(user_id):
-    session = sessionStorage[user_id]
-
-    # Выбираем две первые подсказки из массива.
-    suggests = [
-        {'title': suggest, 'hide': True}
-        for suggest in session['suggests'][:2]
-    ]
-
-    # Убираем первую подсказку, чтобы подсказки менялись каждый раз.
-    session['suggests'] = session['suggests'][1:]
-    sessionStorage[user_id] = session
-
-    # Если осталась только одна подсказка, предлагаем подсказку
-    # со ссылкой на Яндекс.Маркет.
-    if len(suggests) < 2:
-        suggests.append({
-            "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
-            "hide": True
-        })
-
-    return suggests
+    return {
+        'version': event['version'],
+        'session': event['session'],
+        'response': {
+            'text': "Test", 
+            'end_session': False
+        },
+        'session_state': {'translate': translate_state, 'last_phrase': "last_phrase"}
+    }
 
 
 @application.route('/', methods=['POST'])
@@ -93,7 +48,7 @@ def main():
         }
     }
 
-    handle_dialog(request.json, response)
+    response = handle_dialog(request.json, response)
 
     logging.info('Response: %r', response)
 
