@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import json
 import logging
 import pandas as pd
+import pymorphy2
+
 
 # Импортируем подмодули Flask для запуска веб-сервиса.
 from flask import Flask, request
@@ -13,11 +15,34 @@ application = Flask(__name__)
 
 films_data = pd.read_csv("films.csv")
 
+morph = pymorphy2.MorphAnalyzer()
 
 logging.basicConfig(level=logging.DEBUG)
 
 # Хранилище данных о сессиях.
 sessionStorage = {}
+
+from tmdbv3api import TMDb, Movie
+
+tmdb = TMDb()
+tmdb.api_key = 'e1783cc13e6f2086cc492c5da6921749'
+tmdb.language = 'ru'
+
+movie = Movie()
+
+
+def get_movie_id_by_name(name):
+    search = movie.search(name)
+    if search:
+        first = search[0]
+        return first.id
+    return None
+
+
+def get_similar_by_id(id_, topn=3):
+    recommendations = movie.recommendations(movie_id=id_)
+    if recommendations:
+        return recommendations[:topn]
 
 
 def get_film(genre, freshness):
@@ -44,10 +69,16 @@ def handle_dialog(event, context):
 
     end_session = False
     new_state = None
-    response_text = "Привет! Я помогу тебе подобрать фильм. Какой жанр вам нравится?"
+    response_text = "Привет! Я помогу тебе подобрать фильм." \
+                    " Я могу посоветовать Вам комедию, боевик, триллер, драму или фильм ужасов. Что Вас интересует?"
 
     if event["session"]["new"]:
         pass
+
+    elif "help" in intents:
+        response_text = """
+            Я могу рекомендовать фильмы по жанру, найти похожий фильм или найти фильм с вашими любимыми актерами
+            """
     elif "genre" in intents:
         genre_phrase = list(intents["genre"]["slots"].keys())[0]
         new_state = {'genre': genre_phrase}
@@ -64,6 +95,25 @@ def handle_dialog(event, context):
         film_name = get_film(new_state["genre"], new_state["year"])
         response_text = f"Посмотри {film_name}"
         end_session = True
+
+    elif "similar" in intents:
+        print("TESTTTTTTT")
+        print(intents)
+        film_name = intents["similar"]["slots"]["film"]["value"]
+        print(film_name)
+        film_name = morph.parse(film_name)[0]
+        norm_form = film_name.normal_form
+        print(norm_form)
+
+        mid = get_movie_id_by_name(norm_form)
+        response_text = "Не нашла похожие фильмы"
+        if mid:
+            similar_names = get_similar_by_id(mid, topn=3)
+            response_text = f"Похожие фильмы - {' '.join([sim.title for sim in similar_names])}"
+
+        print(response_text)
+    else:
+        response_text = "Вы молодец"
 
     print(event)
     print("\n\n\n\n")
