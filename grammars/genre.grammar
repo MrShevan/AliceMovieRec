@@ -1,0 +1,57 @@
+root:
+    ($Horror|$Comedy|$Action|$Thriller|$Drama|$Adventure|$Animation|$Crime|$Family|$Fantasy)
+slots:
+    horror:
+        source: $Horror
+    comedy:
+        source: $Comedy
+    action:
+        source: $Action
+    thriller:
+        source: $Thriller
+    drama:
+        source: $Drama
+    adventure:
+        source: $Adventure
+    animation:
+        source: $Animation
+    crime:
+        source: $Crime
+    family:
+        source: $Family
+    fantasy:
+        source: $Fantasy
+$Horror:
+    %lemma
+    страшное | ужас | ужастик | пострашнее | хоррор | саспенс | мясо | треш
+$Comedy:
+    %lemma
+    комедия | комедийное | смешное | ржачное | поржать | посмеяться
+$Action:
+    %lemma
+    боевик | боевичок | экшо?н | action |
+$Thriller:
+    %lemma
+    триллеры?
+$Drama:
+    %lemma
+    драма
+$Adventure:
+    %lemma
+    приключения | приключенческое | приключенческие фильмы
+$Animation:
+    %lemma
+    мульт | мультик | мультфильм | детское | для детей
+$Crime:
+    %lemma
+    криминал | криминальное | преступления | преступники | уголовники | бандиты
+$Family:
+    %lemma
+    семейное
+$Fantasy:
+    %lemma
+    фэнтези
+filler:
+    %lemma
+    давай | включи | ебани | ебни | вруби | хочу | какую-нибудь | что-(нибудь|то)( из)?| допустим | что-то | посмотреть
+
